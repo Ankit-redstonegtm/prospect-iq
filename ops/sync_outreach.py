@@ -102,6 +102,10 @@ def with_sentiment(rows):
             r["sentiment"], r["sentiment_source"] = classify(r["message_text"])
     return rows
 
+def ist_day(ts):
+    t = dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return (t + dt.timedelta(hours=5, minutes=30)).date().isoformat()
+
 def domain_of(x):
     if not x: return None
     x = x.strip().lower()
@@ -119,7 +123,7 @@ def sl_get(path, **q):
 
 def sync_smartlead():
     print("Smartlead …")
-    camps, leads, reps, daily = [], [], [], defaultdict(lambda: [0, 0])
+    camps, leads, reps, daily = [], [], [], defaultdict(lambda: [0, 0]); bdaily = defaultdict(int)
     for c in sl_get("/campaigns"):
         cid = c["id"]; key = f"smartlead:{cid}"
         a = sl_get(f"/campaigns/{cid}/analytics")
@@ -134,7 +138,9 @@ def sync_smartlead():
         by_email = defaultdict(list)
         for s in stats: by_email[(s["lead_email"] or "").lower()].append(s)
         for s in stats:
-            if s.get("sent_time"): daily[s["sent_time"][:10]][0] += 1
+            if s.get("sent_time"):
+                daily[ist_day(s["sent_time"])][0] += 1
+                if s.get("is_bounced"): bdaily[ist_day(s["sent_time"])] += 1
         for x in ll:
             L = x["lead"]; em = (L.get("email") or "").lower(); ss = by_email.get(em, [])
             sent = sorted(s["sent_time"] for s in ss if s.get("sent_time"))
@@ -145,6 +151,8 @@ def sync_smartlead():
                 email=em or None, linkedin_url=L.get("linkedin_profile"), company_name=L.get("company_name"),
                 company_domain=domain_of(L.get("website")) or domain_of(em), status=x.get("status"),
                 contacted=bool(sent), contacted_at=sent[0] if sent else None, bounced=bounced, replied=replied,
+                messaged=bool(sent), first_messaged_at=sent[0] if sent else None,
+                bounced_at=min([s["sent_time"] for s in ss if s.get("is_bounced") and s.get("sent_time")] or [None]) if bounced else None,
                 raw={"smartlead_lead_id": L["id"], "lead_category_id": x.get("lead_category_id"), "custom_fields": L.get("custom_fields")},
                 updated_at=NOW))
             if replied:
@@ -152,15 +160,19 @@ def sync_smartlead():
                     hist = sl_get(f"/campaigns/{cid}/leads/{L['id']}/message-history").get("history", [])
                 except Exception as e:
                     print("  message-history failed for a lead:", e); hist = []
+                thread = []
                 for m in hist:
+                    thread.append({"from": "me" if m.get("type") == "SENT" else "them", "at": m.get("time"),
+                                   "subject": m.get("subject"), "body": clean(m.get("email_body"))[:20000]})
                     if m.get("type") != "REPLY": continue
                     txt = clean(m.get("email_body"))
                     reps.append(dict(id=f"sl:{m.get('message_id') or m.get('stats_id')+m.get('time','')}", channel="email",
                         campaign_id=key, lead_id=lid, person_name=leads[-1]["person_name"], email=em,
                         linkedin_url=L.get("linkedin_profile"), company_name=L.get("company_name"),
                         company_domain=leads[-1]["company_domain"], subject=m.get("subject"),
-                        message_text=txt[:8000], received_at=m.get("time"), raw={"stats_id": m.get("stats_id")}, updated_at=NOW))
-                    daily[(m.get("time") or "")[:10]][1] += 1
+                        message_text=txt[:50000], received_at=m.get("time"), raw={"stats_id": m.get("stats_id")},
+                        thread=list(thread), updated_at=NOW))
+                    if m.get("time"): daily[ist_day(m["time"])][1] += 1
         camps.append(dict(id=key, channel="email", external_id=str(cid), name=c["name"], status=c["status"],
             leads_total=int(a.get("campaign_lead_stats", {}).get("total") or len(ll)),
             contacted=int(a.get("unique_sent_count") or 0), sent=int(a.get("sent_count") or 0),
@@ -172,7 +184,7 @@ def sync_smartlead():
         if r["sentiment"] == "positive": pos[r["campaign_id"]] += 1
     for c in camps: c["positives"] = pos[c["id"]]
     upsert("outreach_campaigns", camps); upsert("outreach_leads", leads); upsert("replies", reps)
-    upsert("outreach_daily", [dict(day=d, channel="email", touches=v[0], replies=v[1]) for d, v in daily.items() if d], "day,channel")
+    upsert("outreach_daily", [dict(day=d, channel="email", touches=v[0], sends=v[0], bounces=bdaily[d], replies=v[1]) for d, v in daily.items() if d], "day,channel")
     upsert("outreach_sync_runs", [dict(source="smartlead", synced_at=NOW, details={"campaigns": len(camps), "leads": len(leads), "replies": len(reps)})], ignore=True)
     return len(reps)
 
@@ -190,6 +202,12 @@ def sync_heyreach():
     print("HeyReach (from", HR_DIR, ") …")
     camps_j, leads_j, conv_j, stats_j = load("campaigns.json"), load("leads.json") or {}, load("conversations.json"), load("overall_stats.json")
     if not camps_j: print("  no campaigns.json – skip"); return 0
+    # first message we sent to each profile, from conversations
+    first_msg = {}
+    for c in (conv_j or {}).get("items", []):
+        u = norm_li((c.get("correspondentProfile") or {}).get("profileUrl"))
+        mine = sorted(m["createdAt"] for m in (c.get("messages") or []) if m.get("sender") == "ME" and m.get("createdAt"))
+        if u and mine: first_msg[u] = min(mine[0], first_msg.get(u, mine[0]))
     leads, li_index = [], {}
     per = defaultdict(lambda: dict(contacted=0, replies=0, failed=0))
     for cid, items in leads_j.items():
@@ -198,13 +216,17 @@ def sync_heyreach():
             if not url: continue
             contacted = x.get("leadConnectionStatus") not in (None, "None") or x.get("leadMessageStatus") not in (None, "None")
             replied = x.get("leadMessageStatus") == "MessageReply"
+            messaged = x.get("leadMessageStatus") in ("MessageSent", "MessageReply") or url in first_msg
+            fm = first_msg.get(url) or ((x.get("lastActionTime") or x.get("finishedTime") or x.get("creationTime")) if messaged else None)
             lid = f"linkedin:{cid}:{url}"
             leads.append(dict(id=lid, channel="linkedin", campaign_id=f"heyreach:{cid}",
                 person_name=" ".join(filter(None, [p.get("firstName"), p.get("lastName")])) or None, title=p.get("position") or p.get("headline"),
                 email=p.get("emailAddress") or p.get("enrichedEmailAddress"), linkedin_url=url, company_name=p.get("companyName"),
                 status=f'{x.get("leadCampaignStatus")} / {x.get("leadConnectionStatus")} / {x.get("leadMessageStatus")}',
                 contacted=contacted, contacted_at=(x.get("lastActionTime") or x.get("creationTime")) if contacted else None,
-                replied=replied, raw={"heyreach_lead_id": x.get("id"), "error": x.get("errorCode")}, updated_at=NOW))
+                replied=replied, messaged=messaged, first_messaged_at=fm,
+                connection_accepted=x.get("leadConnectionStatus") == "ConnectionAccepted",
+                raw={"heyreach_lead_id": x.get("id"), "error": x.get("errorCode")}, updated_at=NOW))
             per[str(cid)]["contacted"] += contacted; per[str(cid)]["replies"] += replied
             if x.get("leadCampaignStatus") == "Failed": per[str(cid)]["failed"] += 1
             # prefer most recent campaign for a person
@@ -218,7 +240,10 @@ def sync_heyreach():
             if m.get("sender") == "ME": continue
             reps.append(dict(id=f"hr:{c['id']}:{m.get('createdAt')}", channel="linkedin",
                 campaign_id=lid.split(":")[0] + ":" + lid.split(":")[1] if lid else None, lead_id=lid, person_name=name,
-                linkedin_url=url, company_name=p.get("companyName"), message_text=(m.get("body") or "").strip()[:8000],
+                linkedin_url=url, company_name=p.get("companyName"), message_text=(m.get("body") or "").strip()[:50000],
+                title=p.get("position") or p.get("headline"), email=p.get("emailAddress") or p.get("enrichedEmailAddress"),
+                thread=[{"from": "me" if mm.get("sender") == "ME" else "them", "at": mm.get("createdAt"), "body": mm.get("body")}
+                        for mm in (c.get("messages") or [])[:i + 1]],
                 received_at=m.get("createdAt"), raw={"conversation_id": c["id"], "headline": p.get("headline")}, updated_at=NOW))
     for r in reps:
         if r["campaign_id"]: r["campaign_id"] = "heyreach:" + r["lead_id"].split(":")[1]
@@ -240,6 +265,8 @@ def sync_heyreach():
     if stats_j:
         d = [dict(day=k[:10], channel="linkedin",
                   touches=v.get("connectionsSent", 0) + v.get("totalMessageStarted", 0) + v.get("messagesSent", 0) + v.get("inmailMessagesSent", 0),
+                  conn_requests=v.get("connectionsSent", 0), conn_accepted=v.get("connectionsAccepted", 0),
+                  messages_sent=v.get("totalMessageStarted", 0) + v.get("messagesSent", 0) + v.get("inmailMessagesSent", 0),
                   replies=v.get("totalMessageReplies", 0) + v.get("totalInmailReplies", 0)) for k, v in stats_j.get("byDayStats", {}).items()]
         upsert("outreach_daily", d, "day,channel")
     upsert("outreach_sync_runs", [dict(source="heyreach", synced_at=NOW, details={"campaigns": len(camps), "leads": len(leads), "replies": len(reps),
@@ -251,5 +278,5 @@ if __name__ == "__main__":
     a = ap.parse_args()
     if not a.skip_smartlead: sync_smartlead()
     if not a.skip_heyreach: sync_heyreach()
-    rpc("link_outreach"); n = rpc("ensure_deals")
+    rpc("link_outreach"); rpc("link_reply_titles"); n = rpc("ensure_deals")
     print("deals created this run:", n)

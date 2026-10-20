@@ -34,23 +34,22 @@ h2{font-size:15px;margin:0 0 12px;font-weight:650;display:flex;align-items:cente
 table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em}td.n{text-align:right;font-variant-numeric:tabular-nums}
 .mut{color:var(--mut)}.empty{color:var(--mut);padding:20px;text-align:center}
 .lock{font-size:12px;color:var(--mut)}.lock button{background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:12px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:#0e1018}.seg button{background:transparent;border:0;color:var(--mut);padding:6px 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:12px}.seg button.on{background:#ffffff14;color:var(--txt)}
+.rowlbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin:6px 2px 8px;font-weight:600}.kpi .i{cursor:help;color:#5c6278;margin-left:4px}.cap{color:var(--mut);font-size:12px;margin:-4px 2px 18px;line-height:1.6}
 #err{display:none;background:#3b0d16;border:1px solid #f43f5e66;padding:12px;border-radius:12px;margin-bottom:14px}
 </style></head><body><div class="wrap">
 <header><div class="brand"><div class="logo">R</div><h1>Prospect IQ · Outreach<small>Redstone GTM — Smartlead email + HeyReach LinkedIn</small></h1></div>
-<div class="sync"><div><span class="dot"></span>Last synced <b id="synced">…</b></div><nav><a href="prospect-iq.html">TAM explorer →</a></nav></div></header>
+<div class="sync"><div><span class="dot"></span>Last synced <b id="synced">…</b></div><nav><a href="index.html" style="color:var(--txt)">Overview</a><a href="inbox.html">Inbox</a><a href="prospect-iq.html">TAM explorer</a></nav></div></header>
 <div id="err"></div>
-<section class="kpis" id="kpis"></section>
+<div class="bar"><div class="seg" id="rng"></div><div class="seg" id="chn"></div><span class="mut" style="font-size:12px" id="rlabel"></span></div>
+<div id="kpis"></div>
+<p class="cap"><b>Definitions.</b> Email <i>emailed</i> = unique leads whose first email went out in the range; email rates use emailed as the base. LinkedIn <i>messaged</i> = unique people who received at least one LinkedIn DM from us (from HeyReach conversations / lead message status), dated by our first DM; LinkedIn reply & positive rates use messaged as the base. Connection requests &amp; accepts are HeyReach daily counts. Combined base = emailed + LinkedIn messaged. Replies and positives are counted by the date they arrived. Dates are IST.</p>
 <section class="grid2">
-  <div class="card"><h2>Touches over time <span>email sends · LinkedIn connection requests + messages</span></h2><div style="height:270px"><canvas id="chart"></canvas></div></div>
-  <div class="card"><h2>Campaigns <span id="ccount"></span></h2><div style="max-height:270px;overflow:auto"><table id="camps"></table></div></div>
+  <div class="card"><h2>Activity over time <span>follows the range &amp; channel filters</span></h2><div style="height:270px"><canvas id="chart"></canvas></div></div>
+  <div class="card"><h2>Reply mix <span><a href="inbox.html" style="color:var(--li)">open inbox →</a></span></h2><div style="height:270px"><canvas id="pie"></canvas></div></div>
 </section>
-<section class="grid2">
-  <div class="card"><h2>Unified inbox <span id="icount"></span></h2>
-    <div class="filters" id="fch" style="margin-bottom:6px"></div><div class="filters" id="fse" style="margin-bottom:12px"></div>
-    <div class="inbox" id="inbox"></div></div>
-  <div class="card"><h2>Reply mix</h2><div style="height:220px"><canvas id="pie"></canvas></div>
-    <p class="mut" style="font-size:12px;margin:12px 0 0">Sentiment: rule-based classifier (OOO / negative / positive / neutral). Mail-delivery failures are counted as bounces, not replies.</p></div>
-</section>
+<section class="card" style="margin-bottom:18px"><h2>Campaigns <span id="ccount"></span></h2><div style="max-height:320px;overflow:auto"><table id="camps"></table></div></section>
+
 <section class="card"><h2>Deals board <span class="lock" id="lock"></span></h2><div class="board" id="board"></div></section>
 </div>
 <script>
@@ -61,31 +60,32 @@ const $=id=>document.getElementById(id), esc=s=>(s??"").toString().replace(/[&<>
 const fmt=n=>(n??0).toLocaleString(), pct=x=>(x*100).toFixed(1)+"%";
 const ago=t=>{const s=(Date.now()-new Date(t))/1e3;return s<3600?Math.round(s/60)+"m ago":s<86400?Math.round(s/3600)+"h ago":Math.round(s/86400)+"d ago"};
 const ist=t=>new Date(t).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+" IST";
-function kpis(k){const c=[
- ["Email contacted",fmt(k.email_contacted),fmt(k.emails_sent)+" emails sent","var(--em)"],
- ["LinkedIn contacted",fmt(k.linkedin_contacted),"unique profiles touched","var(--li)"],
- ["Total contacted",fmt(k.total_contacted),"across both channels","#8b5cf6"],
- ["Replies",fmt(k.replies),`${k.replies_email} email · ${k.replies_linkedin} LinkedIn`,"#e5e7eb"],
- ["Positive replies",fmt(k.positives),`${k.positives_email} email · ${k.positives_linkedin} LinkedIn`,"var(--pos)"],
- ["Positive rate · email",pct(k.positive_rate_email),"positives / contacted","var(--em)"],
- ["Positive rate · LinkedIn",pct(k.positive_rate_linkedin),"positives / contacted","var(--li)"],
- ["Bounces",fmt(k.bounces),k.emails_sent?pct(k.bounces/k.emails_sent)+" of sends":"","var(--neg)"]];
- $("kpis").innerHTML=c.map(([l,v,s,col])=>`<div class="card kpi" style="--c:${col}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("")}
-function chart(daily){const days=[...new Set(daily.map(d=>d.day))].sort();const g=(ch,f)=>days.map(d=>(daily.find(x=>x.day==d&&x.channel==ch)||{})[f]||0);
- Chart.defaults.color="#8a90a6";Chart.defaults.font.family="Inter";
- new Chart($("chart"),{type:"bar",data:{labels:days.map(d=>new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short"})),datasets:[
-  {label:"Email",data:g("email","touches"),backgroundColor:"#5b8cffcc",borderRadius:4,stack:"t"},
-  {label:"LinkedIn",data:g("linkedin","touches"),backgroundColor:"#22c3eecc",borderRadius:4,stack:"t"},
-  {label:"Replies",type:"line",data:days.map((d,i)=>g("email","replies")[i]+g("linkedin","replies")[i]),borderColor:"#22c55e",backgroundColor:"#22c55e",yAxisID:"y2",tension:.35,pointRadius:2}]},
+let RANGE="all",CH="both",CHART=null;
+const RANGES=[["7","7d"],["14","14d"],["28","28d"],["30","30d"],["50","50d"],["all","All time"]],CHS=[["email","Email"],["linkedin","LinkedIn"],["both","Email + LinkedIn"]];
+const istToday=()=>new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));
+const dstr=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+function rows(){if(RANGE=="all")return D.daily;const t=istToday();t.setDate(t.getDate()-(+RANGE-1));const from=dstr(t);return D.daily.filter(r=>r.day>=from)}
+const sum=(R,f)=>R.reduce((a,r)=>a+(r[f]||0),0), rate=(a,b)=>b?pct(a/b):"—";
+function card(l,v,s,col,tip){return `<div class="card kpi" style="--c:${col}"><div class="l">${l}${tip?`<span class="i" title="${esc(tip)}">ⓘ</span>`:""}</div><div class="v">${v}</div><div class="s">${s||""}</div></div>`}
+function kpis(){const R=rows(),k={};["emailed","email_sends","bounces","email_replies","email_positives","li_requests","li_accepted","li_messaged","li_replies","li_positives"].forEach(f=>k[f]=sum(R,f));
+ let h="";
+ if(CH=="both"){const base=k.emailed+k.li_messaged,rp=k.email_replies+k.li_replies,po=k.email_positives+k.li_positives;
+  h+=`<div class="rowlbl">Combined</div><div class="kpis">${card("Contacted",fmt(base),`${fmt(k.emailed)} emailed + ${fmt(k.li_messaged)} LinkedIn messaged`,"#8b5cf6","Emailed leads + LinkedIn people messaged")}${card("Replies",fmt(rp),"","#e5e7eb")}${card("Positive replies",fmt(po),"","var(--pos)")}${card("Reply rate",rate(rp,base),"replies / contacted","#e5e7eb")}${card("Positive rate",rate(po,base),"positives / contacted","var(--pos)")}</div>`}
+ if(CH!="linkedin")h+=`<div class="rowlbl">Email · Smartlead</div><div class="kpis">${card("Leads emailed",fmt(k.emailed),"unique, by first send","var(--em)","Unique leads whose first email was sent in range")}${card("Emails sent",fmt(k.email_sends),"incl. follow-ups","var(--em)")}${card("Replies",fmt(k.email_replies),"excl. bounce notices","#e5e7eb")}${card("Positive",fmt(k.email_positives),"","var(--pos)")}${card("Reply rate",rate(k.email_replies,k.emailed),"replies / emailed","#e5e7eb")}${card("Positive rate",rate(k.email_positives,k.emailed),"positives / emailed","var(--pos)")}${card("Bounces",fmt(k.bounces),k.email_sends?pct(k.bounces/k.email_sends)+" of sends":"","var(--neg)")}</div>`;
+ if(CH!="email")h+=`<div class="rowlbl">LinkedIn · HeyReach</div><div class="kpis">${card("Connection requests",fmt(k.li_requests),"sent","var(--li)","HeyReach connectionsSent, by day")}${card("Accepted",fmt(k.li_accepted),k.li_requests?pct(k.li_accepted/k.li_requests)+" of requests (same window)":"","var(--li)","HeyReach connectionsAccepted, by day")}${card("People messaged",fmt(k.li_messaged),"≥1 DM received","var(--li)","Unique profiles that received at least one LinkedIn message from us, dated by first DM")}${card("Replies",fmt(k.li_replies),"","#e5e7eb")}${card("Positive",fmt(k.li_positives),"","var(--pos)")}${card("Reply rate",rate(k.li_replies,k.li_messaged),"replies / messaged","#e5e7eb")}${card("Positive rate",rate(k.li_positives,k.li_messaged),"positives / messaged","var(--pos)")}</div>`;
+ $("kpis").innerHTML=h;$("rlabel").textContent=R.length?(RANGE=="all"?"All time":"Last "+RANGE+" days")+` · ${R[0]?.day||""} → ${R[R.length-1]?.day||""}`:"No activity in range"}
+function chart(){const R=rows();const ds=[];
+ if(CH!="linkedin")ds.push({label:"Emails sent",data:R.map(r=>r.email_sends),backgroundColor:"#5b8cffcc",borderRadius:4,stack:"t"});
+ if(CH!="email"){ds.push({label:"LI connection requests",data:R.map(r=>r.li_requests),backgroundColor:"#22c3ee99",borderRadius:4,stack:"t"});ds.push({label:"LI people messaged",data:R.map(r=>r.li_messaged),backgroundColor:"#a78bfacc",borderRadius:4,stack:"t"})}
+ ds.push({label:"Replies",type:"line",data:R.map(r=>(CH!="linkedin"?r.email_replies:0)+(CH!="email"?r.li_replies:0)),borderColor:"#22c55e",backgroundColor:"#22c55e",yAxisID:"y2",tension:.35,pointRadius:2});
+ Chart.defaults.color="#8a90a6";Chart.defaults.font.family="Inter";if(CHART)CHART.destroy();
+ CHART=new Chart($("chart"),{type:"bar",data:{labels:R.map(r=>new Date(r.day).toLocaleDateString("en-IN",{day:"numeric",month:"short"})),datasets:ds},
   options:{maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:"#1d2130"}},y2:{position:"right",grid:{display:false},ticks:{precision:0}}}}})}
 function pie(R){const s=["positive","neutral","negative","ooo"],col=["#22c55e","#a1a1aa","#f43f5e","#f59e0b"];
  new Chart($("pie"),{type:"doughnut",data:{labels:["Positive","Neutral","Negative","OOO / auto"],datasets:[{data:s.map(x=>R.filter(r=>r.sentiment==x).length),backgroundColor:col,borderWidth:0}]},options:{maintainAspectRatio:false,cutout:"68%",plugins:{legend:{position:"right",labels:{boxWidth:10}}}}})}
+function segs(){const mk=(id,opts,cur,set)=>{$(id).innerHTML=opts.map(([v,l])=>`<button class="${v==cur?"on":""}" data-v="${v}">${l}</button>`).join("");$(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{set(b.dataset.v);segs();kpis();chart()})};
+ mk("rng",RANGES,RANGE,v=>RANGE=v);mk("chn",CHS,CH,v=>CH=v)}
 function camps(C){$("ccount").textContent=C.length+" total";$("camps").innerHTML="<tr><th>Campaign</th><th>Status</th><th class=n>Contacted</th><th class=n>Replies</th><th class=n>Pos.</th></tr>"+C.map(c=>`<tr><td><span class="badge b-${c.channel}">${c.channel=="email"?"Email":"LinkedIn"}</span> <span title="${esc(c.name)}">${esc(c.name.length>46?c.name.slice(0,46)+"…":c.name)}</span></td><td class=mut>${esc(c.status)}</td><td class=n>${fmt(c.contacted)}</td><td class=n>${fmt(c.replies)}</td><td class=n>${fmt(c.positives)}</td></tr>`).join("")}
-function chips(){const mk=(id,opts,cur,set)=>{$(id).innerHTML=opts.map(([v,l])=>`<button class="chip ${v==cur?"on":""}" data-v="${v}">${l}</button>`).join("");$(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{set(b.dataset.v);chips();inbox()})};
- mk("fch",[["all","All channels"],["email","Email"],["linkedin","LinkedIn"]],fc,v=>fc=v);
- mk("fse",[["all","All sentiment"],["positive","Positive"],["neutral","Neutral"],["negative","Negative"],["ooo","OOO"]],fs,v=>fs=v)}
-function inbox(){const R=D.replies.filter(r=>(fc=="all"||r.channel==fc)&&(fs=="all"||r.sentiment==fs));$("icount").textContent=R.length+" of "+D.replies.length;
- $("inbox").innerHTML=R.length?R.map(r=>`<div class="msg" onclick="this.classList.toggle('open')"><div class="top"><span class="co">${esc(r.company_name||r.company_domain||"Unknown")}</span><span class="who">${esc(r.person_name||"")}</span><span class="badge b-${r.channel}">${r.channel=="email"?"Email":"LinkedIn"}</span><span class="badge b-${r.sentiment}">${r.sentiment=="ooo"?"OOO":r.sentiment}</span><span class="t" title="${ist(r.received_at)}">${ago(r.received_at)}</span></div><div class="p">${esc(r.message_text)}</div></div>`).join(""):`<div class="empty">No replies match.</div>`}
 function token(){return localStorage.getItem("piq_admin_token")}
 function board(){const t=token();$("lock").innerHTML=t?`Editing enabled <button onclick="localStorage.removeItem('piq_admin_token');board()">Lock</button>`:`Read-only <button onclick="const v=prompt('Admin token (see SYNC.md)');if(v){localStorage.setItem('piq_admin_token',v);board()}">Unlock editing</button>`;
  $("board").innerHTML=STAGES.map(s=>{const ds=D.deals.filter(d=>d.stage==s);return `<div class="col"><h3>${s}<span>${ds.length}</span></h3>${ds.map(d=>`<div class="deal"><div class="co">${esc(d.company_name||d.company_domain||"Unknown")}</div><div class="who">${esc(d.person_name||"")}</div><span class="badge b-${d.channel}">${d.channel=="email"?"Email":"LinkedIn"}</span> <span class="mut" style="font-size:11px">${ago(d.created_at)}</span>${d.notes?`<div class="mut" style="font-size:12px;margin-top:6px">${esc(d.notes)}</div>`:""}${t?`<select onchange="move(${d.id},this.value)">${STAGES.map(x=>`<option ${x==s?"selected":""}>${x}</option>`).join("")}</select>`:""}</div>`).join("")||`<div class="empty" style="padding:10px">—</div>`}</div>`}).join("")}
@@ -93,6 +93,6 @@ async function move(id,stage){const r=await fetch(API,{method:"POST",headers:{"C
  if(!r.ok){alert("Update failed: "+(j.error||r.status));if(r.status==401)localStorage.removeItem("piq_admin_token")}else{D.deals.find(d=>d.id==id).stage=stage}board()}
 fetch(API).then(r=>r.json()).then(d=>{if(d.error)throw d.error;D=d;window.__DATA=d;
  const ls=Object.values(d.last_synced||{}).sort().pop();$("synced").textContent=ls?ist(ls)+" ("+ago(ls)+")":"never";
- kpis(d.kpis);chart(d.daily);camps(d.campaigns);pie(d.replies);chips();inbox();board();document.body.dataset.ready="1"})
+ segs();kpis();chart();camps(d.campaigns);pie(d.reply_mix);board();document.body.dataset.ready="1"})
  .catch(e=>{$("err").style.display="block";$("err").textContent="Failed to load data: "+e});
 </script></body></html>

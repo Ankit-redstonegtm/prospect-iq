@@ -40,6 +40,17 @@ then calls `link_outreach()` (links to `companies`/`contacts` by email, LinkedIn
 
 The dashboard updates immediately (no redeploy needed). "Last synced" = latest row in `outreach_sync_runs`.
 
+## Metric definitions (what the dashboard shows)
+- Range filter (7/14/28/30/50 days, all time) and channel toggle are applied client-side to the per-day view `outreach_daily_metrics` (IST dates) returned by the edge function.
+- **Email**: leads emailed = unique leads by first send date (`outreach_leads.contacted_at`); emails sent and bounces are per-send counts from Smartlead `/statistics` (bounce is dated by its send). Email rates = replies or positives / leads emailed.
+- **LinkedIn**: connection requests and accepts = HeyReach `byDayStats.connectionsSent` / `connectionsAccepted`. People messaged = unique profiles that got at least one DM from us (`first_messaged_at` = our first message in `get_conversations_v2`, or lead `leadMessageStatus` MessageSent/MessageReply). LinkedIn rates = replies or positives / people messaged.
+- **Combined** base = emailed + LinkedIn messaged. Replies and positives are dated by when they arrived.
+
+## Inbox page (`inbox.html`)
+Full replies (name, title, company, email, LinkedIn URL, full body, thread) come from `GET outreach-dashboard?view=inbox` with header
+`x-admin-token: <token>`. Without a valid token it returns 401. The page asks for the token once and keeps it in localStorage.
+The public `GET outreach-dashboard` returns only aggregates, campaigns, deals and the sentiment mix: no bodies and no email addresses.
+
 ## 3. Moving deals between stages
 The board is read-only until you click **Unlock editing** and paste the admin token from `/workspace/.secrets/dashboard_admin_token`
 (stored in your browser's localStorage only). The edge function calls `update_deal_stage()`, which checks the token's SHA-256 against

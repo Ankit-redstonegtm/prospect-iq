@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redstone GTM · Prospect IQ · Outreach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0a0b10;--panel:#12141c;--panel2:#171a24;--line:#232736;--txt:#e8eaf2;--mut:#8a90a6;--red:#ff4d4d;--em:#5b8cff;--li:#22c3ee;--pos:#22c55e;--neu:#a1a1aa;--neg:#f43f5e;--ooo:#f59e0b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 600px at 10% -10%,#1b1030 0,transparent 60%),radial-gradient(900px 500px at 100% 0,#0b2233 0,transparent 55%),var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:1360px;margin:0 auto;padding:28px 24px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#ff4d4d,#b0124a);display:grid;place-items:center;font-weight:800;box-shadow:0 6px 24px #ff4d4d44}
+h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.01em}h1 small{display:block;color:var(--mut);font-weight:500;font-size:12px}
+.sync{color:var(--mut);font-size:12px;text-align:right}.sync b{color:var(--txt);font-weight:600}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pos);margin-right:6px;box-shadow:0 0 10px var(--pos)}
+nav a{color:var(--mut);text-decoration:none;margin-left:14px;font-size:13px}nav a:hover{color:var(--txt)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi .l{color:var(--mut);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}.kpi .v{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:6px}.kpi .s{color:var(--mut);font-size:12px;margin-top:2px}
+.kpi:before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--c,#444)}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:18px}@media(max-width:980px){.grid2{grid-template-columns:1fr}}
+h2{font-size:15px;margin:0 0 12px;font-weight:650;display:flex;align-items:center;justify-content:space-between;gap:10px}h2 span{color:var(--mut);font-weight:500;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;border:1px solid}
+.b-email{color:var(--em);border-color:#5b8cff55;background:#5b8cff14}.b-linkedin{color:var(--li);border-color:#22c3ee55;background:#22c3ee14}
+.b-positive{color:var(--pos);border-color:#22c55e55;background:#22c55e14}.b-neutral{color:var(--neu);border-color:#a1a1aa44;background:#a1a1aa10}.b-negative{color:var(--neg);border-color:#f43f5e55;background:#f43f5e14}.b-ooo{color:var(--ooo);border-color:#f59e0b55;background:#f59e0b14}
+.filters{display:flex;gap:6px;flex-wrap:wrap}.chip{background:transparent;border:1px solid var(--line);color:var(--mut);padding:5px 11px;border-radius:999px;cursor:pointer;font:inherit;font-size:12px}.chip.on{color:var(--txt);border-color:#ffffff40;background:#ffffff0d}
+.inbox{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto;padding-right:4px}
+.msg{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#0e1018;cursor:pointer;transition:.15s}.msg:hover{border-color:#ffffff30}
+.msg .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.msg .co{font-weight:650}.msg .who{color:var(--mut);font-size:12px}.msg .t{margin-left:auto;color:var(--mut);font-size:12px}
+.msg .p{color:#c4c8d6;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msg.open .p{white-space:pre-wrap}
+.board{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:12px;overflow-x:auto}
+.col{background:#0e1018;border:1px solid var(--line);border-radius:14px;padding:10px;min-height:150px}.col h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:2px 4px 10px;display:flex;justify-content:space-between}
+.deal{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}.deal .co{font-weight:650}.deal .who{color:var(--mut);font-size:12px;margin:2px 0 6px}
+.deal select{width:100%;margin-top:8px;background:#0a0b10;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px;font:inherit;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.mut{color:var(--mut)}.empty{color:var(--mut);padding:20px;text-align:center}
+.lock{font-size:12px;color:var(--mut)}.lock button{background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:12px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:#0e1018}.seg button{background:transparent;border:0;color:var(--mut);padding:6px 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:12px}.seg button.on{background:#ffffff14;color:var(--txt)}
+.rowlbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin:6px 2px 8px;font-weight:600}.kpi .i{cursor:help;color:#5c6278;margin-left:4px}.cap{color:var(--mut);font-size:12px;margin:-4px 2px 18px;line-height:1.6}
+#err{display:none;background:#3b0d16;border:1px solid #f43f5e66;padding:12px;border-radius:12px;margin-bottom:14px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+input.search{flex:1;min-width:220px;background:#0e1018;border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:9px 16px;font:inherit}
+.rep{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:14px}
+.rep .hd{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;justify-content:space-between}
+.rep .nm{font-size:17px;font-weight:700}.rep .ti{color:var(--mut);margin-top:2px}.rep .meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.rep .meta a{color:var(--li);text-decoration:none}.rep .meta a:hover{text-decoration:underline}.rep .when{color:var(--mut);font-size:12px;text-align:right}
+.body{white-space:pre-wrap;word-break:break-word;background:#0b0d14;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:14px;font-size:14px;line-height:1.6}
+.thread{margin-top:12px;display:flex;flex-direction:column;gap:10px}.bub{border-radius:12px;padding:12px 14px;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.55;max-width:88%}
+.bub.me{background:#151a2b;border:1px solid #2a3350;align-self:flex-start}.bub.them{background:#0f2219;border:1px solid #1f5137;align-self:flex-end}.bub .w{font-size:11px;color:var(--mut);margin-bottom:4px;font-weight:600}
+details summary{cursor:pointer;color:var(--mut);font-size:12px;margin-top:12px}
+.gate{max-width:460px;margin:60px auto;text-align:center}.gate input{width:100%;margin:14px 0;background:#0e1018;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px;font:inherit}.gate button{background:#ff4d4d;border:0;color:#fff;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
+</style></head><body><div class="wrap">
+<header><div class="brand"><div class="logo">R</div><h1>Unified inbox<small>Every reply from Smartlead email + HeyReach LinkedIn, newest first</small></h1></div>
+<div class="sync"><nav><a href="index.html">Overview</a><a href="inbox.html" style="color:var(--txt)">Inbox</a><a href="prospect-iq.html">TAM explorer</a></nav><div class="lock" id="lock" style="margin-top:6px"></div></div></header>
+<div id="err"></div>
+<div id="gate" class="card gate" style="display:none"><h2 style="justify-content:center">🔒 Admin token required</h2><p class="mut">The inbox contains names, email addresses and full messages, so it's behind the dashboard admin token. Paste it once — it's saved in this browser only (localStorage).</p><input id="tok" type="password" placeholder="Admin token"><button onclick="saveTok()">Unlock inbox</button></div>
+<div id="app" style="display:none">
+<div class="toolbar"><input class="search" id="q" placeholder="Search name, company, email, message…"><div class="seg" id="fch"></div><div class="seg" id="fse"></div><div class="seg" id="fdt"></div></div>
+<div class="mut" id="cnt" style="margin:-6px 2px 12px;font-size:12px"></div><div id="list"></div></div>
+</div>
+<script>
+const API="https://vsxgszlevcygijgulnzm.supabase.co/functions/v1/outreach-dashboard";
+const $=id=>document.getElementById(id),esc=s=>(s??"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ist=t=>new Date(t).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})+" IST";
+let R=[],fc="all",fs="all",fd="all",q="";
+function saveTok(){const v=$("tok").value.trim();if(v){localStorage.setItem("piq_admin_token",v);load()}}
+function lock(){$("lock").innerHTML=localStorage.getItem("piq_admin_token")?`Unlocked · <a href="#" style="color:var(--mut)" onclick="localStorage.removeItem('piq_admin_token');location.reload()">lock</a>`:""}
+function segs(){const mk=(id,o,cur,set)=>{$(id).innerHTML=o.map(([v,l])=>`<button class="${v==cur?"on":""}" data-v="${v}">${l}</button>`).join("");$(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{set(b.dataset.v);segs();render()})};
+ mk("fch",[["all","All"],["email","Email"],["linkedin","LinkedIn"]],fc,v=>fc=v);
+ mk("fse",[["all","Any sentiment"],["positive","Positive"],["neutral","Neutral"],["negative","Negative"],["ooo","OOO"]],fs,v=>fs=v);
+ mk("fdt",[["7","7d"],["14","14d"],["30","30d"],["50","50d"],["all","All"]],fd,v=>fd=v)}
+function render(){const now=Date.now(),L=R.filter(r=>(fc=="all"||r.channel==fc)&&(fs=="all"||r.sentiment==fs)&&(fd=="all"||now-new Date(r.received_at)<=fd*864e5)
+  &&(!q||[r.person_name,r.title,r.company_name,r.company_domain,r.email,r.linkedin_url,r.message_text,r.subject].join(" ").toLowerCase().includes(q)));
+ $("cnt").textContent=`${L.length} of ${R.length} replies`;
+ $("list").innerHTML=L.map(r=>{const th=(r.thread||[]).filter(m=>m.body);const prior=th.slice(0,-1);
+  return `<article class="rep"><div class="hd"><div><div class="nm">${esc(r.person_name||"Unknown")}</div><div class="ti">${esc(r.title||"")}${r.title&&r.company_name?" · ":""}<b style="color:var(--txt)">${esc(r.company_name||r.company_domain||"")}</b></div>
+  <div class="meta">${r.email?`<a href="mailto:${esc(r.email)}">✉ ${esc(r.email)}</a>`:""}${r.linkedin_url?`<a href="${esc(r.linkedin_url)}" target="_blank" rel="noopener">in ${esc(r.linkedin_url.replace(/^https?:\/\/(www\.)?/,""))}</a>`:""}${r.company_domain?`<span class="mut">${esc(r.company_domain)}</span>`:""}</div></div>
+  <div class="when"><span class="badge b-${r.channel}">${r.channel=="email"?"Email":"LinkedIn"}</span> <span class="badge b-${r.sentiment}">${r.sentiment=="ooo"?"OOO":r.sentiment}</span><div style="margin-top:8px">${ist(r.received_at)}</div>${r.subject?`<div style="margin-top:4px">Re: ${esc(r.subject)}</div>`:""}</div></div>
+  <div class="body">${esc(r.message_text)}</div>
+  ${prior.length?`<details><summary>Show thread (${prior.length} earlier message${prior.length>1?"s":""})</summary><div class="thread">${th.map(m=>`<div class="bub ${m.from}"><div class="w">${m.from=="me"?"Ankit (Redstone GTM)":esc(r.person_name||"Them")} · ${m.at?ist(m.at):""}</div>${esc(m.body)}</div>`).join("")}</div></details>`:""}</article>`}).join("")||`<div class="empty card">No replies match.</div>`}
+async function load(){const t=localStorage.getItem("piq_admin_token");lock();if(!t){$("gate").style.display="block";$("app").style.display="none";return}
+ const r=await fetch(API+"?view=inbox",{headers:{"x-admin-token":t}});
+ if(r.status==401){localStorage.removeItem("piq_admin_token");$("gate").style.display="block";$("err").style.display="block";$("err").textContent="That token was rejected.";lock();return}
+ const d=await r.json();if(d.error){$("err").style.display="block";$("err").textContent=d.error;return}
+ R=d.replies;$("gate").style.display="none";$("err").style.display="none";$("app").style.display="block";segs();render();document.body.dataset.ready="1"}
+$("q").oninput=e=>{q=e.target.value.toLowerCase().trim();render()};$("tok").onkeydown=e=>{if(e.key=="Enter")saveTok()};
+load();
+</script></body></html>
