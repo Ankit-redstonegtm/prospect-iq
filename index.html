@@ -1,2 +1,98 @@
-<!doctype html><html><head><meta charset=utf-8><title>Redstone GTM Prospect IQ</title></head><body style="font:14px system-ui;padding:20px">Loading Redstone GTM Prospect IQ…
-<script>fetch("https://vsxgszlevcygijgulnzm.supabase.co/functions/v1/prospect-iq").then(r=>r.text()).then(h=>{document.open();document.write(h);document.close()}).catch(e=>document.body.textContent="Failed to load: "+e)</script></body></html>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redstone GTM · Prospect IQ · Outreach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0a0b10;--panel:#12141c;--panel2:#171a24;--line:#232736;--txt:#e8eaf2;--mut:#8a90a6;--red:#ff4d4d;--em:#5b8cff;--li:#22c3ee;--pos:#22c55e;--neu:#a1a1aa;--neg:#f43f5e;--ooo:#f59e0b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 600px at 10% -10%,#1b1030 0,transparent 60%),radial-gradient(900px 500px at 100% 0,#0b2233 0,transparent 55%),var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:1360px;margin:0 auto;padding:28px 24px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#ff4d4d,#b0124a);display:grid;place-items:center;font-weight:800;box-shadow:0 6px 24px #ff4d4d44}
+h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.01em}h1 small{display:block;color:var(--mut);font-weight:500;font-size:12px}
+.sync{color:var(--mut);font-size:12px;text-align:right}.sync b{color:var(--txt);font-weight:600}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pos);margin-right:6px;box-shadow:0 0 10px var(--pos)}
+nav a{color:var(--mut);text-decoration:none;margin-left:14px;font-size:13px}nav a:hover{color:var(--txt)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi .l{color:var(--mut);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}.kpi .v{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:6px}.kpi .s{color:var(--mut);font-size:12px;margin-top:2px}
+.kpi:before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--c,#444)}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:18px}@media(max-width:980px){.grid2{grid-template-columns:1fr}}
+h2{font-size:15px;margin:0 0 12px;font-weight:650;display:flex;align-items:center;justify-content:space-between;gap:10px}h2 span{color:var(--mut);font-weight:500;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;border:1px solid}
+.b-email{color:var(--em);border-color:#5b8cff55;background:#5b8cff14}.b-linkedin{color:var(--li);border-color:#22c3ee55;background:#22c3ee14}
+.b-positive{color:var(--pos);border-color:#22c55e55;background:#22c55e14}.b-neutral{color:var(--neu);border-color:#a1a1aa44;background:#a1a1aa10}.b-negative{color:var(--neg);border-color:#f43f5e55;background:#f43f5e14}.b-ooo{color:var(--ooo);border-color:#f59e0b55;background:#f59e0b14}
+.filters{display:flex;gap:6px;flex-wrap:wrap}.chip{background:transparent;border:1px solid var(--line);color:var(--mut);padding:5px 11px;border-radius:999px;cursor:pointer;font:inherit;font-size:12px}.chip.on{color:var(--txt);border-color:#ffffff40;background:#ffffff0d}
+.inbox{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto;padding-right:4px}
+.msg{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#0e1018;cursor:pointer;transition:.15s}.msg:hover{border-color:#ffffff30}
+.msg .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.msg .co{font-weight:650}.msg .who{color:var(--mut);font-size:12px}.msg .t{margin-left:auto;color:var(--mut);font-size:12px}
+.msg .p{color:#c4c8d6;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msg.open .p{white-space:pre-wrap}
+.board{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:12px;overflow-x:auto}
+.col{background:#0e1018;border:1px solid var(--line);border-radius:14px;padding:10px;min-height:150px}.col h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:2px 4px 10px;display:flex;justify-content:space-between}
+.deal{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}.deal .co{font-weight:650}.deal .who{color:var(--mut);font-size:12px;margin:2px 0 6px}
+.deal select{width:100%;margin-top:8px;background:#0a0b10;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px;font:inherit;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.mut{color:var(--mut)}.empty{color:var(--mut);padding:20px;text-align:center}
+.lock{font-size:12px;color:var(--mut)}.lock button{background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:12px}
+#err{display:none;background:#3b0d16;border:1px solid #f43f5e66;padding:12px;border-radius:12px;margin-bottom:14px}
+</style></head><body><div class="wrap">
+<header><div class="brand"><div class="logo">R</div><h1>Prospect IQ · Outreach<small>Redstone GTM — Smartlead email + HeyReach LinkedIn</small></h1></div>
+<div class="sync"><div><span class="dot"></span>Last synced <b id="synced">…</b></div><nav><a href="prospect-iq.html">TAM explorer →</a></nav></div></header>
+<div id="err"></div>
+<section class="kpis" id="kpis"></section>
+<section class="grid2">
+  <div class="card"><h2>Touches over time <span>email sends · LinkedIn connection requests + messages</span></h2><div style="height:270px"><canvas id="chart"></canvas></div></div>
+  <div class="card"><h2>Campaigns <span id="ccount"></span></h2><div style="max-height:270px;overflow:auto"><table id="camps"></table></div></div>
+</section>
+<section class="grid2">
+  <div class="card"><h2>Unified inbox <span id="icount"></span></h2>
+    <div class="filters" id="fch" style="margin-bottom:6px"></div><div class="filters" id="fse" style="margin-bottom:12px"></div>
+    <div class="inbox" id="inbox"></div></div>
+  <div class="card"><h2>Reply mix</h2><div style="height:220px"><canvas id="pie"></canvas></div>
+    <p class="mut" style="font-size:12px;margin:12px 0 0">Sentiment: rule-based classifier (OOO / negative / positive / neutral). Mail-delivery failures are counted as bounces, not replies.</p></div>
+</section>
+<section class="card"><h2>Deals board <span class="lock" id="lock"></span></h2><div class="board" id="board"></div></section>
+</div>
+<script>
+const API="https://vsxgszlevcygijgulnzm.supabase.co/functions/v1/outreach-dashboard";
+const STAGES=["New","Call booked","Proposal","Won","Lost"];
+let D=null,fc="all",fs="all";
+const $=id=>document.getElementById(id), esc=s=>(s??"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>(n??0).toLocaleString(), pct=x=>(x*100).toFixed(1)+"%";
+const ago=t=>{const s=(Date.now()-new Date(t))/1e3;return s<3600?Math.round(s/60)+"m ago":s<86400?Math.round(s/3600)+"h ago":Math.round(s/86400)+"d ago"};
+const ist=t=>new Date(t).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+" IST";
+function kpis(k){const c=[
+ ["Email contacted",fmt(k.email_contacted),fmt(k.emails_sent)+" emails sent","var(--em)"],
+ ["LinkedIn contacted",fmt(k.linkedin_contacted),"unique profiles touched","var(--li)"],
+ ["Total contacted",fmt(k.total_contacted),"across both channels","#8b5cf6"],
+ ["Replies",fmt(k.replies),`${k.replies_email} email · ${k.replies_linkedin} LinkedIn`,"#e5e7eb"],
+ ["Positive replies",fmt(k.positives),`${k.positives_email} email · ${k.positives_linkedin} LinkedIn`,"var(--pos)"],
+ ["Positive rate · email",pct(k.positive_rate_email),"positives / contacted","var(--em)"],
+ ["Positive rate · LinkedIn",pct(k.positive_rate_linkedin),"positives / contacted","var(--li)"],
+ ["Bounces",fmt(k.bounces),k.emails_sent?pct(k.bounces/k.emails_sent)+" of sends":"","var(--neg)"]];
+ $("kpis").innerHTML=c.map(([l,v,s,col])=>`<div class="card kpi" style="--c:${col}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("")}
+function chart(daily){const days=[...new Set(daily.map(d=>d.day))].sort();const g=(ch,f)=>days.map(d=>(daily.find(x=>x.day==d&&x.channel==ch)||{})[f]||0);
+ Chart.defaults.color="#8a90a6";Chart.defaults.font.family="Inter";
+ new Chart($("chart"),{type:"bar",data:{labels:days.map(d=>new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short"})),datasets:[
+  {label:"Email",data:g("email","touches"),backgroundColor:"#5b8cffcc",borderRadius:4,stack:"t"},
+  {label:"LinkedIn",data:g("linkedin","touches"),backgroundColor:"#22c3eecc",borderRadius:4,stack:"t"},
+  {label:"Replies",type:"line",data:days.map((d,i)=>g("email","replies")[i]+g("linkedin","replies")[i]),borderColor:"#22c55e",backgroundColor:"#22c55e",yAxisID:"y2",tension:.35,pointRadius:2}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:"#1d2130"}},y2:{position:"right",grid:{display:false},ticks:{precision:0}}}}})}
+function pie(R){const s=["positive","neutral","negative","ooo"],col=["#22c55e","#a1a1aa","#f43f5e","#f59e0b"];
+ new Chart($("pie"),{type:"doughnut",data:{labels:["Positive","Neutral","Negative","OOO / auto"],datasets:[{data:s.map(x=>R.filter(r=>r.sentiment==x).length),backgroundColor:col,borderWidth:0}]},options:{maintainAspectRatio:false,cutout:"68%",plugins:{legend:{position:"right",labels:{boxWidth:10}}}}})}
+function camps(C){$("ccount").textContent=C.length+" total";$("camps").innerHTML="<tr><th>Campaign</th><th>Status</th><th class=n>Contacted</th><th class=n>Replies</th><th class=n>Pos.</th></tr>"+C.map(c=>`<tr><td><span class="badge b-${c.channel}">${c.channel=="email"?"Email":"LinkedIn"}</span> <span title="${esc(c.name)}">${esc(c.name.length>46?c.name.slice(0,46)+"…":c.name)}</span></td><td class=mut>${esc(c.status)}</td><td class=n>${fmt(c.contacted)}</td><td class=n>${fmt(c.replies)}</td><td class=n>${fmt(c.positives)}</td></tr>`).join("")}
+function chips(){const mk=(id,opts,cur,set)=>{$(id).innerHTML=opts.map(([v,l])=>`<button class="chip ${v==cur?"on":""}" data-v="${v}">${l}</button>`).join("");$(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{set(b.dataset.v);chips();inbox()})};
+ mk("fch",[["all","All channels"],["email","Email"],["linkedin","LinkedIn"]],fc,v=>fc=v);
+ mk("fse",[["all","All sentiment"],["positive","Positive"],["neutral","Neutral"],["negative","Negative"],["ooo","OOO"]],fs,v=>fs=v)}
+function inbox(){const R=D.replies.filter(r=>(fc=="all"||r.channel==fc)&&(fs=="all"||r.sentiment==fs));$("icount").textContent=R.length+" of "+D.replies.length;
+ $("inbox").innerHTML=R.length?R.map(r=>`<div class="msg" onclick="this.classList.toggle('open')"><div class="top"><span class="co">${esc(r.company_name||r.company_domain||"Unknown")}</span><span class="who">${esc(r.person_name||"")}</span><span class="badge b-${r.channel}">${r.channel=="email"?"Email":"LinkedIn"}</span><span class="badge b-${r.sentiment}">${r.sentiment=="ooo"?"OOO":r.sentiment}</span><span class="t" title="${ist(r.received_at)}">${ago(r.received_at)}</span></div><div class="p">${esc(r.message_text)}</div></div>`).join(""):`<div class="empty">No replies match.</div>`}
+function token(){return localStorage.getItem("piq_admin_token")}
+function board(){const t=token();$("lock").innerHTML=t?`Editing enabled <button onclick="localStorage.removeItem('piq_admin_token');board()">Lock</button>`:`Read-only <button onclick="const v=prompt('Admin token (see SYNC.md)');if(v){localStorage.setItem('piq_admin_token',v);board()}">Unlock editing</button>`;
+ $("board").innerHTML=STAGES.map(s=>{const ds=D.deals.filter(d=>d.stage==s);return `<div class="col"><h3>${s}<span>${ds.length}</span></h3>${ds.map(d=>`<div class="deal"><div class="co">${esc(d.company_name||d.company_domain||"Unknown")}</div><div class="who">${esc(d.person_name||"")}</div><span class="badge b-${d.channel}">${d.channel=="email"?"Email":"LinkedIn"}</span> <span class="mut" style="font-size:11px">${ago(d.created_at)}</span>${d.notes?`<div class="mut" style="font-size:12px;margin-top:6px">${esc(d.notes)}</div>`:""}${t?`<select onchange="move(${d.id},this.value)">${STAGES.map(x=>`<option ${x==s?"selected":""}>${x}</option>`).join("")}</select>`:""}</div>`).join("")||`<div class="empty" style="padding:10px">—</div>`}</div>`}).join("")}
+async function move(id,stage){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({deal_id:id,stage,token:token()})});const j=await r.json();
+ if(!r.ok){alert("Update failed: "+(j.error||r.status));if(r.status==401)localStorage.removeItem("piq_admin_token")}else{D.deals.find(d=>d.id==id).stage=stage}board()}
+fetch(API).then(r=>r.json()).then(d=>{if(d.error)throw d.error;D=d;window.__DATA=d;
+ const ls=Object.values(d.last_synced||{}).sort().pop();$("synced").textContent=ls?ist(ls)+" ("+ago(ls)+")":"never";
+ kpis(d.kpis);chart(d.daily);camps(d.campaigns);pie(d.replies);chips();inbox();board();document.body.dataset.ready="1"})
+ .catch(e=>{$("err").style.display="block";$("err").textContent="Failed to load data: "+e});
+</script></body></html>
